@@ -1,0 +1,26 @@
+{
+    "Model Variables": {
+        "Batch Size": 32,
+        "Epochs": 100,
+        "Training Percentage": 0.8,
+        "Number of Predictions": 30,
+        "Units": 250,
+        "Activation": "tanh",
+        "Loss": "mae",
+        "Optimizer": "adam"
+    },
+
+    "Hyperparameter Grid": {
+        "Units": [50, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000],
+        "Epochs": [25, 50, 100, 150],
+        "Activation": ["tanh", "sigmoid", "relu"],
+        "Optimizer": ["adam", "sgd", "rmsprop", "adadelta", "adagrad"],
+        "Loss": ["categorical_crossentropy", "mae"]
+    },
+
+    "Data": {
+        "Ticker": "SPY",
+        "Start Date": "2020-01-01",
+        "End Date": "2022-01-01"
+    }
+}
