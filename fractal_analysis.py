@@ -3,10 +3,8 @@ import numpy as np
 from data_handler import data_preprocess
 
 
-# Calculate Hurst Exponent
+def get_hurst_exponent(data, lag=20):  # Calculate Hurst Exponent
 
-
-def get_hurst_exponent(data, lag=20):
     lags = range(2, lag)
     tau = [np.std(np.subtract(data[lag:], data[:-lag])) for lag in lags]
     reg = np.polyfit(np.log(lags), np.log(tau), 1)
@@ -40,7 +38,7 @@ def ornstein_uhlenbeck(data):
     return None
 
 
-# Calculate exponenet using lags
+# Calculate exponent using lags
 """for lag in [20, 100, 300, 500, 1000]:
     hurst_exp = get_hurst_exponent(data["Close"].values, lag)
     print(f"Hurst exponent with {lag} lags: {hurst_exp:.4f}")"""
