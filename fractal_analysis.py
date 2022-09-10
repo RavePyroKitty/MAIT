@@ -2,6 +2,9 @@ import numpy as np
 
 from data_handler import data_preprocess
 
+# TODO: Have the program self update the batch variable (and others if needed) based on the Hurst Exponent
+#  (batch should equal timesteps for hurst = 0.5 if model is RW)
+
 
 def get_hurst_exponent(data, lag=20):  # Calculate Hurst Exponent
 

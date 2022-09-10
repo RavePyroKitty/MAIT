@@ -1,4 +1,22 @@
+import alpaca_trade_api as alpaca
 import requests
+
+
+def alpaca_authorization(live=False):
+
+    if live:
+        secret_key = "IBAAAUbhmCvqUeZ5vSxDouyFcDC5bCJZeFqmDTcX"
+        api_key = "AKO8114OKV3WOL1MFYUP"
+        endpoint = "https://api.alpaca.markets"
+
+    else:
+        secret_key = "PKPS6TXSJTYANGU432LG"
+        api_key = "Dw4JzCGDQ604GJDig7Ev1Cp49mlVrCdc4cvfGE9x"
+        endpoint = "https://paper-api.alpaca.market"
+
+    rest = alpaca.REST(key_id=api_key, secret_key=secret_key, base_url=endpoint)
+
+    return rest
 
 
 def td_ameritrade_authorization():
@@ -11,13 +29,5 @@ def td_ameritrade_authorization():
 
     r = r.json()
     print(r)
-
-    return None
-
-
-def alpaca_authorization():
-    API_Key = "AKCENFVXZCPQHJO0NCMD"
-
-    endpoint = "https://api.alpaca.markets"
 
     return None
