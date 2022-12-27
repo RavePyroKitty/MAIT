@@ -1,10 +1,13 @@
 import keras
 import numpy as np
-from keras.layers import MaxPooling2D, ConvLSTM2D, Embedding, Dense, GlobalMaxPooling2D, Flatten
+from keras.layers import MaxPooling2D, ConvLSTM2D, Embedding, Dense, Flatten, GlobalMaxPooling1D, Conv1D
 from official.nlp.modeling.layers import RandomFeatureGaussianProcess
 from tensorflow_addons.layers import SpectralNormalization
 
 from sentimental_analysis.sentimental_features import SentimentalFeatures
+
+
+# from transformers import Conv1D
 
 
 # TODO: Organize this code into a class that fits with the rest of the syntax of the program
@@ -20,12 +23,14 @@ class SentimentalThinker(SentimentalFeatures):
         return self.embedded_sentences.shape
 
     def think(self):
-        inputs = self.format_data()
+        # inputs = self.format_data()
 
         model = keras.Sequential()
-        model.add(Dense(units=2000, activation='tanh'))
+        model.add(Dense(units=2000, activation='tanh', input_dim=30))
         model.add(Dense(units=2000, activation='sigmoid'))  # Logits layers (sigmoid output of dense activation) (see: MAIT sentimental thinker)
-        model.add(GlobalMaxPooling2D())  # Max pooling layer (see: MAIT sentimental thinker)
+        model.add(Embedding(output_dim=64))  # TODO: You were trying to get this model to be dimensional compdatible between the layers
+        model.add(Conv1D(kernel_size=3, filters=64, activation='tanh'))
+        model.add(GlobalMaxPooling1D())  # Max pooling layer (see: MAIT sentimental thinker)
         model.add(ConvLSTM2D(kernel_size=3, filters=64, activation='tanh'))
         model.add(MaxPooling2D(pool_size=2))
         model.add(ConvLSTM2D(kernel_size=3, filters=64, activation='softmax'))
