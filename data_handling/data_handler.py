@@ -1,12 +1,82 @@
 import datetime
+import json
 
 import yfinance as yf
 from newsapi import NewsApiClient
 from newspaper import Article
 
+with open("Globals.json") as json_data_file:
+    variables = json.load(json_data_file)
+
+"""
+def get_raw_data(ticker, start_date, end_date, source='yahoo_finance', verbose=False):
+
+    if source == 'yahoo_finance':
+
+        data = yf.download(tickers=ticker, start=start_date, end=end_date)
+
+        if verbose:
+            plt.plot(data['Close'], color='blue', label='Closing Prices')
+            plt.title(label='Raw data')
+            plt.legend(loc='center left', title='Legend')
+            plt.show(block=False)
+            plt.pause(2)
+            plt.close('all')
+
+        return data
+
+    if source == 'alpaca':
+        alpaca_rest = alpaca_authorization()
+        stock_data = alpaca_rest.get_bars(symbol=ticker, timeframe='day', start=start_date, end=end_date)
+        stock_data = pd.DataFrame(data=stock_data)
+        # TODO: Make the timeframe argument work so that the REST can get the stock bars
+        if verbose:
+            plt.plot(stock_data['c'], color='blue', label='Closing Prices')
+            plt.title(label='Raw data')
+            plt.legend(loc='center left', title='Legend')
+            plt.show(block=False)
+            plt.pause(2)
+            plt.close('all')
+
+        return stock_data
+"""
+
+
+# OPERATIONS:
+
+##################################################
+
+def format(data):
+    # Format the incoming data from multiple sources into the same format of data for model training
+
+    return None
+
+
+def data_preprocess(data, batch_size, normalize=True):
+    remainder = int(len(data)) % batch_size
+    data = data[:-remainder]
+
+    if normalize:
+        data = (data - data.min()) / (data.max() - data.min())
+
+    data.fillna(value=0, inplace=True)
+
+    return data
+
+
+# Data Denormalize (min-max)
+def data_denormalize(data, min, max):
+    denormalized = []
+
+    for i in (range(len(data))):
+        denormalized.append((data[i] * (max - min)) + min)
+
+    return denormalized
+
 
 class Data:
-    def __init__(self, ticker='SPY', start_date=None, end_date=datetime.datetime.now(), interval='15m', period='5d', news_outlets=None):
+    def __init__(self, ticker='SPY', start_date=None, end_date=datetime.datetime.now(), interval='15m', period='5d',
+                 news_outlets=None):
         self.ticker = ticker
         self.start_date = start_date
         self.end_date = end_date
@@ -15,13 +85,14 @@ class Data:
         self.price_data = self.get_pricing_data()
         self.newsapi = NewsApiClient(api_key='5376f110fee146ba838c8e92e115fdba')
 
-    def get_pricing_data(self):  # Date input format = "year-month-day"
+    def get_pricing_data(self):  # Date input format = "year-month-day" # TODO: Add 'normalized' feature to it to
+        # return normalized data
 
         start = self.start_date
         end = self.end_date
 
         if self.start_date is None:
-            start = self.end_date - datetime.timedelta(days=5)
+            start = self.end_date - datetime.timedelta(days=850)
             start = str(start.strftime("%Y-%m-%d"))
             end = str(self.end_date.strftime("%Y-%m-%d"))
 

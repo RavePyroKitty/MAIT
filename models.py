@@ -1,3 +1,4 @@
+import json
 import math
 
 import keras
@@ -7,11 +8,16 @@ from keras import layers
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import GridSearchCV
 
+import data_handling.data_handler
+from data_handling.data_handler import data_denormalize, data_preprocess
 
 # TODO: Add model here that trains and exports itself similar to the method used in Tailor
 # TODO: Write in the Ornstein-Uhlenbeck equations here with their respective parameters
 # TODO: Include Langevin analysis for the random process within the movements of the stock prices
 # See the wikipedia page: https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process with the section on financial mathematics
+
+with open('Globals.json') as global_variables:
+    variables = json.load(global_variables)
 
 
 def random_walk_grid_search(model=None, X=None, y=None, parameters=variables["Hyperparameter Grid"]):
@@ -33,10 +39,17 @@ def build_random_walk_model(units=variables["Model Variables"]["Units"],
                             optimizer=variables["Model Variables"]["Optimizer"],
                             timesteps=20, features=1):
     model = keras.Sequential()
-    model.add(layers.LSTM(units=units, input_shape=(timesteps, features), activation=activation))
+    model.add(layers.LSTM(units=units, input_shape=(timesteps, features), activation='relu', return_sequences=True))
     model.add(layers.Dropout(0.2))
-    model.add(layers.Dense(units=1))
-    model.compile(loss=loss, optimizer=optimizer)
+    model.add(layers.LSTM(units=250, activation='tanh', return_sequences=True))
+    model.add(layers.Dropout(0.2))
+    model.add(layers.LSTM(units=350, activation='relu', return_sequences=True))
+    model.add(layers.Dropout(0.2))
+    model.add(layers.LSTM(units=350, activation='softmax'))
+    model.add(layers.Dropout(0.2))
+    model.add(layers.Dense(units=100, activation='tanh'))
+    model.add(layers.Dense(units=1, activation='relu'))
+    model.compile(loss='mean_squared_error', optimizer='rmsprop')
     model.summary()
 
     return model
@@ -45,22 +58,19 @@ def build_random_walk_model(units=variables["Model Variables"]["Units"],
 def train_random_walk_model(data, epochs=variables["Model Variables"]["Epochs"],
                             train_percentage=variables["Model Variables"]["Training Percentage"],
                             timesteps=20, gs_params=variables["Hyperparameter Grid"], grid_search=False):
-    # Preprocess data
-    data = data_preprocess(data=data, batch=timesteps)
+    data = data_preprocess(data=data, batch_size=timesteps)
     data_max = data['Close'].max()
     data_min = data['Close'].min()
-    data = data_normalize(data=data)
+    data = data_preprocess(data=data, normalize=True, batch_size=32)
     close = data['Close']
 
     X = []
     y = []
 
-    # Honestly don't think this is necessary, but why not. We're using the past group of n timesteps to as the single feature to predict the next datapoint
     for i in range(len(data) - timesteps):
         X.append(close[i:i + timesteps])
         y.append(close[i + timesteps])
 
-    # Shape input data for model training [Number of samples (length of dataset),  batch size (timesteps), number of features (1)]
     X = np.array(X)
     X = np.reshape(X, (X.shape[0], timesteps, 1))
     print('Shape of X data:')
@@ -127,34 +137,41 @@ def train_random_walk_model(data, epochs=variables["Model Variables"]["Epochs"],
     return model, X, data_min, data_max, y_test
 
 
-def random_walk_prediction(data=None, model=None, num_predictions=variables["Model Variables"]["Number of Predictions"],
+def random_walk_prediction(data=None, model=None, num_predictions=variables["Model Variables"]["Number of " \
+                                                                                               "Predictions"],
                            batch_size=variables["Model Variables"]["Batch Size"], data_min=None, data_max=None):
     prediction = []
     prediction = np.array(prediction)
 
     data = np.array(data)
     data = data.flatten()
-    X = data[(len(data) - batch_size):]
-    X = np.reshape(X, (1, batch_size, 1))
+    X = data[len(data) - batch_size:]
 
     for i in (range(num_predictions)):
+        X = np.reshape(X, (1, batch_size, 1))
+
         print('Shape of input data:')
         print(X.shape)
 
-        y_pred = model.predict(X, batch_size=batch_size)
+        # y_pred = model.predict(X, batch_size=batch_size)
+        y_pred = model.predict_on_batch(X)
+
+        print('Prediction:', y_pred)
 
         X = X.flatten()
-        X = np.append(X, (data[i:i + batch_size]))
-        X = np.reshape(X, (i + 2, batch_size, 1))
+        X = np.delete(X, 0)
+        X = np.append(X, y_pred.flatten())
 
         data = np.append(data, y_pred)
 
-        y_pred = data_denormalize(y_pred, min=data_min, max=data_max)
         prediction = np.append(prediction, y_pred)
 
-    prediction = model.predict(X)
-    prediction = prediction.flatten()
+    # prediction = model.predict(X)
+    # prediction = prediction.flatten()
+    # prediction = data_denormalize(prediction, min=data_min, max=data_max)
+
     prediction = data_denormalize(prediction, min=data_min, max=data_max)
+    print('Prediction denormalized:', prediction)
 
     return prediction
 
@@ -177,3 +194,8 @@ def RW(data=None, epochs=variables["Model Variables"]["Epochs"],
     plt.show()
 
     return prediction
+
+
+data = data_handling.data_handler.Data().get_pricing_data()
+
+RW(data=data)

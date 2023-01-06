@@ -1,12 +1,12 @@
 {
     "Model Variables": {
         "Batch Size": 32,
-        "Epochs": 100,
+        "Epochs": 50,
         "Training Percentage": 0.8,
-        "Number of Predictions": 30,
+        "Number of Predictions": 90,
         "Units": 250,
         "Activation": "tanh",
-        "Loss": "mae",
+        "Loss": "rmseprop",
         "Optimizer": "adam"
     },
 

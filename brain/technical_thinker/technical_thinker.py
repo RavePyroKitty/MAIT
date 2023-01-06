@@ -151,7 +151,13 @@ class TechnicalThinker:
         model = self.convolution(datasets=datasets)
 
         # TODO: The current cross-timescale embedder outputs raw data about how the market moves (see notes), take the next step
-        return None
+        return model
+
+    def predict(self):
+
+        input_x = None
+
+        model = self.think()
 
 
 print(TechnicalThinker().think())
