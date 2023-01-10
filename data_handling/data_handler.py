@@ -75,7 +75,7 @@ def data_denormalize(data, min, max):
 
 
 class Data:
-    def __init__(self, ticker='SPY', start_date=None, end_date=datetime.datetime.now(), interval='15m', period='5d',
+    def __init__(self, ticker='SPY', start_date=None, end_date=datetime.datetime.now(), interval='15m', period='1d',
                  news_outlets=None):
         self.ticker = ticker
         self.start_date = start_date
@@ -92,12 +92,14 @@ class Data:
         end = self.end_date
 
         if self.start_date is None:
-            start = self.end_date - datetime.timedelta(days=850)
+            start = self.end_date - datetime.timedelta(days=25)
             start = str(start.strftime("%Y-%m-%d"))
             end = str(self.end_date.strftime("%Y-%m-%d"))
 
         ticker = yf.Ticker(ticker=self.ticker)
         price_data = ticker.history(start=start, end=end, interval=self.interval, period=self.period)
+
+        print('Sample pricing data:', price_data.head())
 
         return price_data
 

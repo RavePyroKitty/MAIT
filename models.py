@@ -45,7 +45,7 @@ def build_random_walk_model(units=variables["Model Variables"]["Units"],
     model.add(layers.Dropout(0.2))
     model.add(layers.LSTM(units=350, activation='relu', return_sequences=True))
     model.add(layers.Dropout(0.2))
-    model.add(layers.LSTM(units=350, activation='softmax'))
+    model.add(layers.LSTM(units=350, activation='relu'))
     model.add(layers.Dropout(0.2))
     model.add(layers.Dense(units=100, activation='tanh'))
     model.add(layers.Dense(units=1, activation='relu'))
@@ -61,7 +61,7 @@ def train_random_walk_model(data, epochs=variables["Model Variables"]["Epochs"],
     data = data_preprocess(data=data, batch_size=timesteps)
     data_max = data['Close'].max()
     data_min = data['Close'].min()
-    data = data_preprocess(data=data, normalize=True, batch_size=32)
+    data = data_preprocess(data=data, normalize=True, batch_size=timesteps)
     close = data['Close']
 
     X = []
@@ -75,6 +75,7 @@ def train_random_walk_model(data, epochs=variables["Model Variables"]["Epochs"],
     X = np.reshape(X, (X.shape[0], timesteps, 1))
     print('Shape of X data:')
     print(X.shape)
+    print('X data:', X)
     y = np.array(y)
     y = np.reshape(y, (y.shape[0], 1))
     print('Shape of y data:')
@@ -141,7 +142,7 @@ def random_walk_prediction(data=None, model=None, num_predictions=variables["Mod
                                                                                                "Predictions"],
                            batch_size=variables["Model Variables"]["Batch Size"], data_min=None, data_max=None):
     prediction = []
-    prediction = np.array(prediction)
+    # prediction = np.array(prediction)
 
     data = np.array(data)
     data = data.flatten()
@@ -164,7 +165,7 @@ def random_walk_prediction(data=None, model=None, num_predictions=variables["Mod
 
         data = np.append(data, y_pred)
 
-        prediction = np.append(prediction, y_pred)
+        prediction.append(y_pred)
 
     # prediction = model.predict(X)
     # prediction = prediction.flatten()
