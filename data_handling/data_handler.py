@@ -5,8 +5,10 @@ import yfinance as yf
 from newsapi import NewsApiClient
 from newspaper import Article
 
-with open("Globals.json") as json_data_file:
-    variables = json.load(json_data_file)
+from utils import normalizer
+
+# with open("Globals.json") as json_data_file:
+#    variables = json.load(json_data_file)
 
 """
 def get_raw_data(ticker, start_date, end_date, source='yahoo_finance', verbose=False):
@@ -65,27 +67,24 @@ def data_preprocess(data, batch_size, normalize=True):
 
 
 # Data Denormalize (min-max)
-def data_denormalize(data, min, max):
-    denormalized = []
-
-    for i in (range(len(data))):
-        denormalized.append((data[i] * (max - min)) + min)
-
-    return denormalized
-
 
 class Data:
-    def __init__(self, ticker='SPY', start_date=None, end_date=datetime.datetime.now(), interval='15m', period='1d',
+    def __init__(self, ticker='SPY', start_date=None, end_date=datetime.datetime.now(), interval='1d', period='1mo',
                  news_outlets=None):
-        self.ticker = ticker
-        self.start_date = start_date
-        self.end_date = end_date
-        self.interval = interval
-        self.period = period
-        self.price_data = self.get_pricing_data()
-        self.newsapi = NewsApiClient(api_key='5376f110fee146ba838c8e92e115fdba')
+        with open(r"C:\Users\nicco_ev5q3ww\OneDrive\Desktop\Market Analysis Tools\Globals.json") as f:
+            settings = json.load(f).get('Pricing Metadata')
+        with open(r"C:\Users\nicco_ev5q3ww\OneDrive\Desktop\Market Analysis Tools\Globals.json") as f:
+            keys = json.load(f).get('Keys')
 
-    def get_pricing_data(self):  # Date input format = "year-month-day" # TODO: Add 'normalized' feature to it to
+        self.ticker = settings.get('Ticker')
+        self.start_date = settings.get('Start Date')
+        self.end_date = settings.get('End Date')
+        self.interval = settings.get('Interval')
+        self.period = settings.get('Period')
+        self.price_data = self.get_pricing_data()
+        self.newsapi = NewsApiClient(api_key=keys.get("NewsAPI"))
+
+    def get_pricing_data(self, normalize=False):  # Date input format = "year-month-day" # TODO: Add 'normalized' feature to it to
         # return normalized data
 
         start = self.start_date
@@ -100,6 +99,9 @@ class Data:
         price_data = ticker.history(start=start, end=end, interval=self.interval, period=self.period)
 
         print('Sample pricing data:', price_data.head())
+        if normalize:
+            price_data, scaling_values = normalizer(price_data)
+            return price_data, scaling_values
 
         return price_data
 
@@ -127,4 +129,4 @@ class Data:
         return article_content
 
 
-print(Data().get_news_articles())
+Data().get_news_articles()

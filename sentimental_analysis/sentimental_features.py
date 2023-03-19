@@ -1,3 +1,4 @@
+import openai
 from transformers import BertTokenizer, TFBertModel
 
 from sentimental_analysis.sautils import text_cleanup, preprocess_for_bert
@@ -32,3 +33,11 @@ class SentimentalFeatures(SentimentalClasses):
         embedded_sentences.append(embedded_sentences)
 
         return embedded_sentences
+
+    def return_openai_embeddings(self, input_text, model):
+        result = openai.Embedding.create(
+            model=model,
+            input=input_text
+        )
+
+        return result["data"][0]["dmbedding"]

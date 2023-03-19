@@ -1,4 +1,4 @@
-import datetime
+import json
 import math
 
 import pandas as pd
@@ -15,9 +15,13 @@ from technical_analysis.tautils import *
 # (the MACD)
 
 class TechnicalFeatures(Data):
-    def __init__(self, oscillatory_window=14, volatility_window=14, moving_average_window=28, index_overbought=80, index_oversold=20, ticker='SPY', start_date=None,
-                 end_date=datetime.datetime.now(), interval='15m', period='5d'):
-        super().__init__(ticker=ticker, start_date=start_date, end_date=end_date, interval=interval, period=period)
+    def __init__(self, oscillatory_window=14, volatility_window=14, moving_average_window=28, index_overbought=80, index_oversold=20):
+
+        super().__init__()
+
+        with open(r"C:\Users\nicco_ev5q3ww\OneDrive\Desktop\Market Analysis Tools\Globals.json") as f:
+            settings = json.load(f).get('Settings')
+
         self.oscillatory_window = oscillatory_window
         self.volatility_window = volatility_window
         self.moving_average_window = moving_average_window
@@ -34,6 +38,8 @@ class TechnicalFeatures(Data):
         technical_features['MFI'], technical_features['MFI Overbought'], technical_features['MFI Oversold'] = self.money_flow_index()
         technical_features['Above EMA'], technical_features['Below EMA'] = self.exponential_moving_average()
         technical_features['MACD'], technical_features['MACD Histogram'] = self.moving_average_convergence_divergence()
+
+        print(self.bollinger_bands())
 
         return technical_features
 

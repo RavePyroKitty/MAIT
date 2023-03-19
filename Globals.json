@@ -1,46 +1,67 @@
 {
-    "Model Variables": {
-        "Batch Size": 32,
-        "Epochs": 50,
-        "Training Percentage": 0.8,
-        "Number of Predictions": 90,
-        "Units": 250,
-        "Activation": "tanh",
-        "Loss": "rmseprop",
-        "Optimizer": "adam"
-    },
-
-    "Hyperparameter Grid": {
-        "Units": [50, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000],
-        "Epochs": [
-            25,
-            50,
-            100,
-            150
-        ],
-        "Activation": [
-            "tanh",
-            "sigmoid",
-            "relu"
-        ],
-        "Optimizer": [
-            "adam",
-            "sgd",
-            "rmsprop",
-            "adadelta",
-            "adagrad"
-        ],
-        "Loss": [
-            "categorical_crossentropy",
-            "mae"
-        ]
-    },
-    "Data": {
-        "Ticker": "SPY",
-        "Start Date": "2020-01-01",
-        "End Date": "2022-01-01"
-    },
-    "Keys": {
-        "TD Ameritrade": "CQDBO4LWTWC0ZJJOMLNHEV9UEQMVCFFJ"
-    }
+  "Model Variables": {
+    "Batch Size": 32,
+    "Epochs": 50,
+    "Training Percentage": 0.8,
+    "Number of Predictions": 90,
+    "Units": 250,
+    "Activation": "tanh",
+    "Loss": "rmseprop",
+    "Optimizer": "adam"
+  },
+  "Hyperparameter Grid": {
+    "Units": [
+      50,
+      100,
+      250,
+      500,
+      750,
+      1000,
+      1500,
+      2000,
+      2500,
+      3000,
+      5000
+    ],
+    "Epochs": [
+      25,
+      50,
+      100,
+      150
+    ],
+    "Activation": [
+      "tanh",
+      "sigmoid",
+      "relu"
+    ],
+    "Optimizer": [
+      "adam",
+      "sgd",
+      "rmsprop",
+      "adadelta",
+      "adagrad"
+    ],
+    "Loss": [
+      "categorical_crossentropy",
+      "mae"
+    ]
+  },
+  "Pricing Metadata": {
+    "Ticker": "SPY",
+    "Start Date": "2023-02-01",
+    "End Date": "2023-03-17",
+    "Interval": "1d",
+    "Period": "1mo"
+  },
+  "Technical Features Hyperparameters": {
+    "Oscillatory Window": 14,
+    "Volatility Window": 14,
+    "Moving Average Window": 28,
+    "Index Overbought": 80,
+    "Index Oversold": 20
+  },
+  "Keys": {
+    "TD Ameritrade": "CQDBO4LWTWC0ZJJOMLNHEV9UEQMVCFFJ",
+    "NewsAPI": "5376f110fee146ba838c8e92e115fdba"
+  }
 }

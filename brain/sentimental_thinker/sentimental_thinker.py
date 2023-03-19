@@ -46,5 +46,9 @@ class SentimentalThinker(SentimentalFeatures):
         model.compile(loss='rmse', optimizer='adam')
         model.summary()
 
+    def talk(self):
+        COMPLETIONS_MODEL = "text-davinci-003"
+        EMBEDDING_MODEL = "text-embedding-ada-002"
+
 
 SentimentalThinker().think()

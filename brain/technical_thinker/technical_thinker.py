@@ -12,7 +12,7 @@ from technical_analysis.technical_classes import TechnicalClasses
 class TechnicalTicker(TechnicalClasses):
     def __init__(self, vector_dimensions=64, oscillatory_window=14, volatility_window=14, moving_average_window=28, index_overbought=80, index_oversold=20, ticker='SPY',
                  start_date=None,
-                 end_date=datetime.datetime.now(), interval='15m', period='5d'):  # valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+                 end_date=datetime.datetime.now(), interval='1d', period='1mo'):  # valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
         super().__init__(oscillatory_window=oscillatory_window, volatility_window=volatility_window, moving_average_window=moving_average_window, index_overbought=index_overbought,
                          index_oversold=index_oversold, ticker=ticker, start_date=start_date, end_date=end_date, interval=interval, period=period)
         self.technical_features_normalized, self.technical_features_normalizer = self.normalize()
@@ -21,6 +21,7 @@ class TechnicalTicker(TechnicalClasses):
 
     def normalize(self):
         normalizer = MinMaxScaler()
+        print(self.technical_features)
         normalized = normalizer.fit_transform(X=self.technical_features)
 
         return normalized, normalizer

@@ -5,11 +5,11 @@ import keras
 import matplotlib.pyplot as plt
 import numpy as np
 from keras import layers
-from keras.wrappers.scikit_learn import KerasClassifier
-from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import MinMaxScaler
+from keras.layers import LSTM
+from keras_multi_head import MultiHeadAttention
+
 import data_handling.data_handler
-from data_handling.data_handler import data_denormalize, data_preprocess
+from utils import data_denormalize
 
 # TODO: Add model here that trains and exports itself similar to the method used in Tailor
 # TODO: Write in the Ornstein-Uhlenbeck equations here with their respective parameters
@@ -22,13 +22,13 @@ with open('Globals.json') as global_variables:
 
 def build_random_walk_model():
     model = keras.Sequential()
-    model.add(layers.LSTM(units=250, input_shape=(20, 1), activation='relu', return_sequences=True))
+    model.add(layers.Bidirectional(LSTM(units=250, input_shape=(20, 1), activation='relu', return_sequences=True)))
     model.add(layers.Dropout(0.2))
-    model.add(layers.LSTM(units=250, activation='tanh', return_sequences=True))
+    model.add(MultiHeadAttention(LSTM(units=250, activation='tanh', return_sequences=True), num_heads=8))
     model.add(layers.Dropout(0.2))
-    model.add(layers.LSTM(units=350, activation='relu', return_sequences=True))
+    model.add(layers.Bidirectional(LSTM(units=350, activation='relu', return_sequences=True)))
     model.add(layers.Dropout(0.2))
-    model.add(layers.LSTM(units=350, activation='relu'))
+    model.add(MultiHeadAttention(LSTM(units=350, activation='relu'), num_heads=8))
     model.add(layers.Dropout(0.2))
     model.add(layers.Dense(units=100, activation='tanh'))
     model.add(layers.Dense(units=1, activation='relu'))
@@ -38,23 +38,28 @@ def build_random_walk_model():
     return model
 
 
-def train_random_walk_model(data, epochs=50, train_percentage=0.7, timesteps=20):
+def train_random_walk_model(data, scaler, epochs=25, train_percentage=0.7, timesteps=20):
+    print('training data:', data.head(), data.shape)
 
-    print('training data:', data.head())
+    num_samples = data.shape[0]
+    channels = data.shape[1]
 
-    close = np.reshape(data.values, newshape=(-1, 1))
-    data_scaler = MinMaxScaler(copy=False)
-    normalize_training_data = data_scaler.fit_transform(X=close)
+    normalized_training_data = data.to_numpy()
 
+    #   close = np.reshape(data.to_numpy(), newshape=(-1, 1))
+    #   data_scaler = MinMaxScaler(copy=False)
+    #   normalized_training_data = data_scaler.fit_transform(X=close)
+    #    print('Training data normalized:', normalized_training_data)
     X = []
     y = []
 
-    for i in range(len(normalize_training_data) - timesteps):
-        X.append(close[i:i + timesteps])
-        y.append(close[i + timesteps])
+    for i in range(num_samples - timesteps - 1):
+        X.append(normalized_training_data[i:i + timesteps])
+        y.append(normalized_training_data[i + timesteps + 1][0])
 
     X = np.array(X)
-    X = np.reshape(X, (X.shape[0], timesteps, 1))
+    print('X shape:', X.shape)
+    X = np.reshape(X, (X.shape[0], 1, timesteps, channels))
     print('Shape of X data:', X.shape)
     y = np.array(y)
     y = np.reshape(y, (y.shape[0], 1, 1))
@@ -63,17 +68,37 @@ def train_random_walk_model(data, epochs=50, train_percentage=0.7, timesteps=20)
     X_train, X_test = X[:math.floor(len(X) * train_percentage)], X[math.floor(len(X) * train_percentage):]
     y_train, y_test = y[:math.floor(len(y) * train_percentage)], X[math.floor(len(y) * train_percentage):]
 
-    model = build_random_walk_model()
+    model = keras.Sequential()
+    model.add(layers.Bidirectional(layers.ConvLSTM1D(filters=64, kernel_size=3, activation='tanh', recurrent_dropout=0.2, data_format='channels_last', return_sequences=True),
+                                   input_shape=X_train.shape[1:]))
+    # model.add(layers.Dropout(0.2))
+    # model.add(layers.ActivityRegularization(0.3))
+    model.add(layers.Bidirectional(layers.ConvLSTM1D(filters=128, kernel_size=3, activation='tanh', recurrent_dropout=0.2, data_format='channels_last', return_sequences=True)))
+    # model.add(layers.Dropout(0.2))
+    # model.add(layers.ActivityRegularization(0.3))
+    model.add(layers.ConvLSTM1D(filters=64, kernel_size=3, activation='tanh', recurrent_dropout=0.2, data_format='channels_last'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(units=1000, activation='tanh'))
+    model.add(layers.Dense(units=500, activation='softmax'))
+    #  model.add(layers.Dropout(0.3))
+    model.add(layers.Dense(units=100, activation='relu'))
+    #  model.add(layers.Dropout(0.3))
+    model.add(layers.Dense(units=32, activation='relu'))
+    model.add(layers.Dense(units=1))
+    model.compile(loss='mean_squared_error', optimizer='adam')
+    model.summary()
 
     history = model.fit(X_train, y_train, epochs=epochs, batch_size=timesteps, shuffle=False)
+
+    model.save('close_price_forecaster.h5')
+
     y_pred = model.predict(X_test)
+    print('Prediction:', y_pred.shape)
     y_pred = y_pred.flatten()
+    y = y.flatten()
 
-    y_pred = np.reshape(y_pred, newshape=(-1, 1))
-    y = np.reshape(y, newshape=(-1, 1))
-
-    y_pred = data_scaler.inverse_transform(y_pred)
-    y = data_scaler.inverse_transform(y)
+    y_pred = data_denormalize(y_pred, scaler.get('Close')[0], scaler.get('Close')[1])
+    y = data_denormalize(y, scaler.get('Close')[0], scaler.get('Close')[1])
 
     plt.plot(range(0, len(y)), y, label='True', color='Green')
     plt.plot(range(len(y) - len(y_pred), len(y)), y_pred, label='Prediction', color='Red')
@@ -83,70 +108,34 @@ def train_random_walk_model(data, epochs=50, train_percentage=0.7, timesteps=20)
     plt.pause(2)
     plt.close('all')
 
-    y_test = y_test.flatten()
-
-    return model, data_scaler
+    return model
 
 
-def random_walk_prediction(data, model, scaler, num_predictions=30):
+def random_walk_prediction(data, model, scaler, num_predictions=1, timesteps=20):
     prediction = []
-    data = np.array(data)
-    data = data.flatten()
-    X = data[len(data) - num_predictions:]
+    data = data.to_numpy()
+    num_features = data.shape[1]
+    X = data[data.shape[0] - timesteps:]
 
     for i in (range(num_predictions)):
-        X = np.reshape(X, (1, num_predictions, 1))
-
-        print('Shape of input data:', X.shape)
-
+        X = np.reshape(X, (1, 1, timesteps, num_features))
         y_pred = model.predict_on_batch(X)
 
         X = X.flatten()
-        X = np.delete(X, 0)
-        X = np.append(X, y_pred.flatten())
 
         data = np.append(data, y_pred)
 
         prediction.append(y_pred)
 
-    prediction = scaler.inverse_transform(prediction)
+    prediction = data_denormalize(prediction, scaler.get('Close')[0], scaler.get('Close')[1])
     print('Prediction denormalized:', prediction)
 
     return prediction
 
-data = data_handling.data_handler.Data().get_pricing_data()
 
-model, scaler = train_random_walk_model(data=data['Close'])
+data, scaler = data_handling.data_handler.Data().get_pricing_data(normalize=True)
+print(data.shape)
 
-
-
-def RW(data=None, epochs=variables["Model Variables"]["Epochs"],
-       train_percentage=variables["Model Variables"]["Training Percentage"],
-       gs_params=variables["Hyperparameter Grid"], timesteps=20):
-    model, X, data_min, data_max, y_test = train_random_walk_model(data=data, timesteps=timesteps, epochs=epochs,
-                                                                   train_percentage=train_percentage,
-                                                                   gs_params=gs_params)
-    prediction = random_walk_prediction(data=X, model=model, batch_size=timesteps, data_min=data_min, data_max=data_max)
-
-    # Plot the previous batch in one color and the prediction in another for better visualization
-
-    # plt.plot(previous.shape[0], previous, label='True Test Data', color='red')
-    # plt.plot((previous.shape[0] + prediction.shape[0]), prediction, label='Prediction', color='blue')
-    plt.plot(prediction, color='red', label='prediction')
-    plt.title(label='Future prediction')
-    plt.legend(loc='center left', title='Legend')
-    plt.show()
-
-    return prediction
-
-def random_walk_grid_search(model=None, X=None, y=None, parameters=variables["Hyperparameter Grid"]):
-    model = KerasClassifier(build_fn=build_random_walk_model)
-
-    grid_search = GridSearchCV(estimator=model, param_grid=parameters, cv=5)
-
-    grid_search = grid_search.fit(X=X, y=y)
-
-    best_params = grid_search.best_params_
-    accuracy = grid_search.best_score_
-
-    return best_params, accuracy
+# model, scaler = train_random_walk_model(data=data['Close'])
+model = train_random_walk_model(data, scaler)
+prediction = random_walk_prediction(data=data, model=model, scaler=scaler)
