@@ -48,8 +48,8 @@
   },
   "Pricing Metadata": {
     "Ticker": "SPY",
-    "Start Date": "2023-02-01",
-    "End Date": "2023-03-17",
+    "Start Date": "2020-02-01",
+    "End Date": "2023-03-01",
     "Interval": "1d",
     "Period": "1mo"
   },

@@ -4,11 +4,13 @@ import math
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from keras import layers
 from keras.layers import LSTM
 from keras_multi_head import MultiHeadAttention
 
-import data_handling.data_handler
+from technical_analysis.technical_features import TechnicalFeatures
+# import data_handling.data_handler
 from utils import data_denormalize
 
 # TODO: Add model here that trains and exports itself similar to the method used in Tailor
@@ -39,6 +41,9 @@ def build_random_walk_model():
 
 
 def train_random_walk_model(data, scaler, epochs=25, train_percentage=0.7, timesteps=20):
+    data = data.fillna(value=0)
+    data = data.interpolate()
+
     print('training data:', data.head(), data.shape)
 
     num_samples = data.shape[0]
@@ -133,7 +138,16 @@ def random_walk_prediction(data, model, scaler, num_predictions=1, timesteps=20)
     return prediction
 
 
-data, scaler = data_handling.data_handler.Data().get_pricing_data(normalize=True)
+data_handler = TechnicalFeatures()
+data, scaler = data_handler.get_pricing_data(normalize=True)
+max_samples = data.shape[0]
+technical_features = data_handler.get_feature_values()
+technical_features = technical_features[:max_samples]
+print('Shape of features:', technical_features.shape, 'Sample:', technical_features[:25])
+data = pd.concat([data, technical_features])
+data = data[:max_samples]
+print('Len of data:', data.shape)
+
 print(data.shape)
 
 # model, scaler = train_random_walk_model(data=data['Close'])

@@ -54,18 +54,6 @@ def format(data):
     return None
 
 
-def data_preprocess(data, batch_size, normalize=True):
-    remainder = int(len(data)) % batch_size
-    data = data[:-remainder]
-
-    if normalize:
-        data = (data - data.min()) / (data.max() - data.min())
-
-    data.fillna(value=0, inplace=True)
-
-    return data
-
-
 # Data Denormalize (min-max)
 
 class Data:
@@ -101,6 +89,7 @@ class Data:
         print('Sample pricing data:', price_data.head())
         if normalize:
             price_data, scaling_values = normalizer(price_data)
+            print('Sample normalized pricing data:', price_data.head())
             return price_data, scaling_values
 
         return price_data
@@ -127,6 +116,3 @@ class Data:
         print(article_content)
 
         return article_content
-
-
-Data().get_news_articles()

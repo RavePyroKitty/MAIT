@@ -49,3 +49,15 @@ def data_denormalize(data, min, max):
         denormalized.append((data[i] * (max - min)) + min)
 
     return denormalized
+
+
+def data_preprocess(data, batch_size, normalize=True):
+    remainder = int(len(data)) % batch_size
+    data = data[:-remainder]
+
+    if normalize:
+        data = (data - data.min()) / (data.max() - data.min())
+
+    data.fillna(value=0, inplace=True)
+
+    return data

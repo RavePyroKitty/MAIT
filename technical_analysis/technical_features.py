@@ -20,15 +20,15 @@ class TechnicalFeatures(Data):
         super().__init__()
 
         with open(r"C:\Users\nicco_ev5q3ww\OneDrive\Desktop\Market Analysis Tools\Globals.json") as f:
-            settings = json.load(f).get('Settings')
+            settings = json.load(f).get('Technical Features Hyperparameters')
 
-        self.oscillatory_window = oscillatory_window
-        self.volatility_window = volatility_window
-        self.moving_average_window = moving_average_window
-        self.std_dev_window = moving_average_window // volatility_window
-        self.index_overbought = index_overbought
-        self.index_oversold = index_oversold
-        self.signal_period = math.ceil(oscillatory_window / self.std_dev_window)
+        self.oscillatory_window = settings.get("Oscillatory Window")
+        self.volatility_window = settings.get("Volatility Window")
+        self.moving_average_window = settings.get("Moving Average Window")
+        self.std_dev_window = settings.get("Moving Average Window") // settings.get("Volatility Window")
+        self.index_overbought = settings.get("Index Overbought")
+        self.index_oversold = settings.get("Index Oversold")
+        self.signal_period = math.ceil(settings.get("Oscillatory Window") / self.std_dev_window)
         self.technical_features = self.get_feature_values()
 
     def get_feature_values(self):
@@ -38,8 +38,7 @@ class TechnicalFeatures(Data):
         technical_features['MFI'], technical_features['MFI Overbought'], technical_features['MFI Oversold'] = self.money_flow_index()
         technical_features['Above EMA'], technical_features['Below EMA'] = self.exponential_moving_average()
         technical_features['MACD'], technical_features['MACD Histogram'] = self.moving_average_convergence_divergence()
-
-        print(self.bollinger_bands())
+        technical_features = technical_features.interpolate()
 
         return technical_features
 
