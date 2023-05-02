@@ -72,16 +72,21 @@ def train_random_walk_model(data, scaler, epochs=25, train_percentage=0.7, times
 
     X_train, X_test = X[:math.floor(len(X) * train_percentage)], X[math.floor(len(X) * train_percentage):]
     y_train, y_test = y[:math.floor(len(y) * train_percentage)], X[math.floor(len(y) * train_percentage):]
-
+ 
     model = keras.Sequential()
-    model.add(layers.Bidirectional(layers.ConvLSTM1D(filters=64, kernel_size=3, activation='tanh', recurrent_dropout=0.2, data_format='channels_last', return_sequences=True),
-                                   input_shape=X_train.shape[1:]))
+    model.add(layers.Bidirectional(
+        layers.ConvLSTM1D(filters=64, kernel_size=3, activation='tanh', recurrent_dropout=0.2,
+                          data_format='channels_last', return_sequences=True),
+        input_shape=X_train.shape[1:]))
     # model.add(layers.Dropout(0.2))
     # model.add(layers.ActivityRegularization(0.3))
-    model.add(layers.Bidirectional(layers.ConvLSTM1D(filters=128, kernel_size=3, activation='tanh', recurrent_dropout=0.2, data_format='channels_last', return_sequences=True)))
+    model.add(layers.Bidirectional(
+        layers.ConvLSTM1D(filters=128, kernel_size=3, activation='tanh', recurrent_dropout=0.2,
+                          data_format='channels_last', return_sequences=True)))
     # model.add(layers.Dropout(0.2))
     # model.add(layers.ActivityRegularization(0.3))
-    model.add(layers.ConvLSTM1D(filters=64, kernel_size=3, activation='tanh', recurrent_dropout=0.2, data_format='channels_last'))
+    model.add(layers.ConvLSTM1D(filters=64, kernel_size=3, activation='tanh', recurrent_dropout=0.2,
+                                data_format='channels_last'))
     model.add(layers.Flatten())
     model.add(layers.Dense(units=1000, activation='tanh'))
     model.add(layers.Dense(units=500, activation='softmax'))
