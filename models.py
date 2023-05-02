@@ -145,6 +145,7 @@ def random_walk_prediction(data, model, scaler, num_predictions=1, timesteps=20)
 
 data_handler = TechnicalFeatures()
 data, scaler = data_handler.get_pricing_data(normalize=True)
+print(data)
 max_samples = data.shape[0]
 technical_features = data_handler.get_feature_values()
 technical_features = technical_features[:max_samples]

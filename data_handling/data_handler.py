@@ -4,8 +4,7 @@ import json
 import yfinance as yf
 from newsapi import NewsApiClient
 from newspaper import Article
-
-from utils import normalizer
+from sklearn.preprocessing import StandardScaler
 
 # with open("Globals.json") as json_data_file:
 #    variables = json.load(json_data_file)
@@ -88,9 +87,12 @@ class Data:
 
         print('Sample pricing data:', price_data.head())
         if normalize:
-            price_data, scaling_values = normalizer(price_data)
-            print('Sample normalized pricing data:', price_data.head())
-            return price_data, scaling_values
+            scaler = StandardScaler()
+            scaler.fit(price_data)
+            scaled_values = scaler.transform(price_data)
+            # price_data, scaling_values = normalizer(price_data)
+            print('Sample normalized pricing data:', price_data[:10])
+            return scaled_values, scaler
 
         return price_data
 
